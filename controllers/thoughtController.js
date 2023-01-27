@@ -31,26 +31,50 @@ const thoughtController = {
   },
 
   // Create a new thought
-  createThought(req, res) {
-    Thought.create(req.body)    
-      .then(({ _id }) => {
-        return User.findOneAndUpdate(          
-          { _id: req.body.userId },
-          { $push: { thoughts: _id } },
-          { new: true }
-        );
-      })
-      .then((dbUserData) => {
-        if (!dbUserData) {
-          res.status(404).json({ message: 'No user found with this id!' });
-          return;
+  async createThought(req, res) {
+
+    try {
+      const dbUserData = await User.findOne({ _id: req.body.userId });
+
+      console.log("dbUserData: ",dbUserData);
+
+      if (!dbUserData) {
+        res.status(404).json({ message: 'No user found with this id!' });
+        return;
+      }
+
+      
+      const thoughtData = await Thought.create(
+        {
+          thoughtText: req.body.thoughtText,
+          username: dbUserData.username
         }
-        res.json(dbUserData);
-      })
-      .catch((err) =>{ 
-        console.log(err);
-        res.json(err)
-      });
+      );
+
+      console.log("thoughtData: ",thoughtData);
+
+
+      const newUserData = await User.findOneAndUpdate(
+        { _id: req.body.userId },
+        { $push: { thoughts: thoughtData._id } },
+        { new: true }
+      );
+
+      console.log("newUserData: ",newUserData);
+
+      if (!newUserData) {
+        res.status(404).json({ message: 'No user found with this id!' });
+        return;
+      }
+
+      res.json(thoughtData);
+
+    } catch (err) {
+      console.log(err);
+      res.json(err)
+    }
+
+
   },
 
   // Update a thought by id
@@ -137,7 +161,7 @@ const thoughtController = {
         console.log(err);
         res.json(err)
       });
-   }
+  }
 };
 
 module.exports = thoughtController;
