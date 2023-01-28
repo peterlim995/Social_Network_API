@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, Thought } = require('../models');
 
 const userController = {
 
@@ -69,19 +69,55 @@ const userController = {
   },
 
   // Delete a user by id
-  deleteUser(req, res) {
-    User.findOneAndDelete({ _id: req.params.userId })
-      .then((dbUserData) => {
-        if (!dbUserData) {
-          res.status(404).json({ message: 'No user found with this id!' });
-          return;
-        }
-        res.json(dbUserData);
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(400).json(err);
-      }); 
+  async deleteUser(req, res) {
+    try {
+
+      const dbUserData = await User.findOne({ _id: req.params.userId });
+
+      console.log("dbUserData: ",dbUserData);
+      
+      if (!dbUserData) {
+        res.status(404).json({ message: 'No user found with this id!' });
+        return;
+      } 
+
+      // Remove a user's associated thoughts when deleted.
+      const removedThoughtData = await Thought.deleteMany({ username: dbUserData.username});
+            
+      console.log("removedThoughtData: ",removedThoughtData);
+
+      // Remove a user's associated reactions when deleted
+      const reactionRemovedData = await Thought.updateMany(
+        { "reactions.username": dbUserData.username }, 
+        { $pull: { reactions: { username: dbUserData.username } } }, 
+        { multi: true}
+      );
+
+      console.log("reactionRemovedData: ",reactionRemovedData);
+      
+
+      const deleteUserData = await User.findOneAndDelete({ _id: req.params.userId });
+
+      if (!deleteUserData) {
+        res.status(404).json({ message: 'No user found with this id!' });
+        return;
+      }
+
+      console.log("deleteUserData: ",deleteUserData);
+
+      const deleteinfo = {
+        removedThoughtData,
+        reactionRemovedData,
+        deleteUserData
+      };
+
+      // res.json(deleteUserData);
+      res.json(deleteinfo);
+
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);     
+    }
   },
 
   // Add a new friend to a user's friend list
