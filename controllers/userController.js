@@ -67,6 +67,18 @@ const userController = {
   async updateUser(req, res) {
 
     try {
+
+      const userDate = await User.findOne(
+        { _id: req.params.userId }
+      );
+
+      if (!userDate) {
+        res.status(404).json({ message: 'No user found with this id!' });
+        return;
+      }
+
+      const oldUsername = userDate.username;
+
       const dbUserData = await User.findOneAndUpdate(
         { _id: req.params.userId },
         { $set: req.body },
@@ -82,14 +94,14 @@ const userController = {
       // Update a user's associated thoughts when username is changed.
       if(req.body.username) {
         const updateThoughtData = await Thought.updateMany(
-          { username: dbUserData.username },
+          { username: oldUsername },
           { $set: { username: req.body.username } }
         );
         console.log("updateThoughtData: ",updateThoughtData);
 
         // Update a user's associated reactions when username is changed.
         const updateReactionData = await Thought.updateMany(
-          { "reactions.username": dbUserData.username },
+          { "reactions.username": oldUsername },
           { $set: { "reactions.$.username": req.body.username } }
         );
         console.log("updateReactionData: ",updateReactionData);        

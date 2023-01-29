@@ -64,8 +64,8 @@ const thoughtController = {
           thoughtText: req.body.thoughtText,
           username: req.body.username
         }     
-      )
-      .select('-__v');
+      );
+      
       
       console.log("thoughtData: ",thoughtData);
 
@@ -87,7 +87,7 @@ const thoughtController = {
         newUserData
       }
 
-      res.json(createThought);
+      res.json(createThought);      
 
     } catch (err) {
       console.log(err);
