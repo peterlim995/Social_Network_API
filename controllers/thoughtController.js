@@ -58,7 +58,7 @@ const thoughtController = {
         { _id: req.body.userId },
         { $push: { thoughts: thoughtData._id } },
         { new: true }
-      );
+      ).select('-__v');
 
       console.log("newUserData: ",newUserData);
 

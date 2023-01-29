@@ -1,7 +1,7 @@
 {
   "name": "Social_Network_API",
   "version": "1.0.1",
-  "description": "Mongoose back-end project - Main",
+  "description": "Social_Network_API Home work 18",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
